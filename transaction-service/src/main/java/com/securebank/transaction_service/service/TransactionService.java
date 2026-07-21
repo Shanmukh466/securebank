@@ -4,6 +4,8 @@ import com.securebank.transaction_service.dto.TransactionStatusResponse;
 import com.securebank.transaction_service.dto.TransferRequest;
 import com.securebank.transaction_service.entity.Transaction;
 import com.securebank.transaction_service.event.TransactionInitiatedEvent;
+import com.securebank.transaction_service.event.FraudDecisionEvent;
+import org.springframework.kafka.annotation.KafkaListener;
 import com.securebank.transaction_service.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -56,6 +58,24 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new NoSuchElementException("Transaction not found: " + transactionId));
         return toResponse(transaction);
+    }
+
+    @KafkaListener(topics = "transaction.fraud-decision", groupId = "transaction-service-group")
+    @Transactional
+    public void handleFraudDecision(FraudDecisionEvent event) {
+        Transaction transaction = transactionRepository.findById(event.transactionId())
+                .orElse(null);
+
+        if (transaction == null) {
+            return;
+        }
+
+        Transaction.TransactionStatus newStatus = "APPROVED".equals(event.decision())
+                ? Transaction.TransactionStatus.COMPLETED
+                : Transaction.TransactionStatus.FLAGGED;
+
+        transaction.setStatus(newStatus);
+        transactionRepository.save(transaction);
     }
 
     private TransactionStatusResponse toResponse(Transaction t) {

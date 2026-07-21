@@ -3,6 +3,8 @@ import Navbar from './components/Navbar'
 import Dashboard from './pages/Dashboard'
 import CreateAccount from './pages/CreateAccount'
 import AccountDetail from './pages/AccountDetail'
+import Transfer from './pages/Transfer'
+import TransactionStatus from './pages/TransactionStatus'
 
 function App() {
   return (
@@ -13,6 +15,8 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/accounts/new" element={<CreateAccount />} />
           <Route path="/accounts/:accountId" element={<AccountDetail />} />
+          <Route path="/transfer" element={<Transfer />} />
+          <Route path="/transactions/:transactionId" element={<TransactionStatus />} />
         </Routes>
       </div>
     </BrowserRouter>
